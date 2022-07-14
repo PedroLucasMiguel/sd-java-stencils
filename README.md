@@ -1,2 +1,2 @@
 # sd-java-stencils
-Aplicação para uso de Stencils usando Java sockets
+Aplicação para uso de estêncils com sockets em Java
