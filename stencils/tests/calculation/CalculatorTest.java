@@ -8,15 +8,21 @@ class CalculatorTest {
     }
 
     private static void testCalculation() {
-        final var matrix = new ColorMatrix(5, List.of(
+        final var theMatrix = new ColorMatrix(5, List.of(
                 new FixedPoint(new Color(255, 0, 0), 2, 2)
-        )).splice(0, 7);
+        ));
+
+        final var matrix = theMatrix.splice(0, 7);
 
         printMatrix(matrix, 7, 7);
 
         final var newMatrix = Calculator.innerCellStencilAverage(matrix, 7, 7);
 
         printMatrix(newMatrix, 5, 5);
+
+        theMatrix.updateLines(newMatrix, 1, 5);
+
+        System.out.println(theMatrix);
     }
 
     private static void printMatrix(final Color[][] matrix, final int x, final int y) {

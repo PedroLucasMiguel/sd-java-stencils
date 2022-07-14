@@ -75,6 +75,17 @@ public class ColorMatrix {
         return result;
     }
 
+    public void updateLines(final Color[][] matrix, final int startInclusive, final int lineCount) {
+        for (int i = 0; i < lineCount; ++i)
+        {
+            System.arraycopy(
+                    matrix[i], 0,
+                    this.matrix[i + startInclusive], 1,
+                    this.outerSize - 2
+            );
+        }
+    }
+
     @Override
     public String toString() {
         final var sb = new StringBuilder();
