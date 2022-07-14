@@ -1,84 +1,60 @@
 import java.io.*;
 import java.net.Socket;
-import java.net.UnknownHostException;
+import java.util.Scanner;
 
 public class Client {
 
     private static Socket s = null;
-    private static InputStreamReader isr = null;
-    private static OutputStreamWriter isw = null;
-    private static BufferedReader br = null;
-    private static BufferedWriter bw = null;
+    private static InputStreamReader inputStream = null;
+    private static OutputStreamWriter outputStream = null;
+    private static BufferedReader bufferedReader = null;
+    private static BufferedWriter bufferedWriter = null;
 
-    private static void initSocketAndStreams() {
+    private static void initializeClient(int port) {
         try{
-            s = new Socket("localhost", 1212);
-            isr = new InputStreamReader(s.getInputStream());
-            isw = new OutputStreamWriter(s.getOutputStream());
-            br = new BufferedReader(isr);
-            bw = new BufferedWriter(isw);
-        } catch (IOException e){
+            s = new Socket("localhost", port);
+            inputStream = new InputStreamReader(s.getInputStream());
+            outputStream = new OutputStreamWriter(s.getOutputStream());
+            bufferedReader = new BufferedReader(inputStream);
+            bufferedWriter = new BufferedWriter(outputStream);
+        } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static String receiveMessage() {
+        try {
+            String aux = bufferedReader.readLine();
+
+            if (aux.equals("Predo")){
+                System.out.println("WILL SLEEP, GOOD BYE!");
+                Thread.sleep(10000);
+                System.out.println("WAKE UP SAMURAI!");
+            }
+
+            System.out.println("Server: YOUR NAME IS: " + aux);
+            return aux;
+        } catch (IOException e) {
+            return "ERROR";
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
     private static void sendMessage(String msg) {
         try {
-            bw.write(msg);
-            bw.newLine();
-            bw.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void waitForAnswer(String msg2send) {
-        try {
-            System.out.println(msg2send);
-            sendMessage(msg2send);
-
-            while (true){
-                String msg = br.readLine();
-
-                if (msg.equalsIgnoreCase("CLOSE")) {
-                    System.out.println("Closing connection...");
-                    break;
-                }
-
-                System.out.println(msg);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void terminateClient() {
-        try {
-            if (s != null)
-                s.close();
-            if (br != null)
-                br.close();
-            if (bw != null)
-                bw.close();
-            if (isr != null)
-                isr.close();
-            if (isw != null)
-                isw.close();
+            bufferedWriter.write(msg+'\n');
+            bufferedWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static void main(String[] args) {
-        // init stuff
-        initSocketAndStreams();
-
-        waitForAnswer("Hello Socket!");
-        waitForAnswer("Hello Socket1!");
-        waitForAnswer("Hello Socket3!");
-
-        terminateClient();
+        initializeClient(1212);
+        while (true){
+            sendMessage(receiveMessage());
+        }
     }
 
 }
