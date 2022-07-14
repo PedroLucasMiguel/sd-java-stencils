@@ -3,7 +3,7 @@ package calculation;
 import java.util.Scanner;
 
 public record FixedPoint(Color color, int i, int j) {
-    static FixedPoint scanFixedPoint(Scanner s) {
+    static FixedPoint scanFixedPoint(final Scanner s) {
         final int xPos = s.nextInt();
         final int yPos = s.nextInt();
         final int r = s.nextInt();
