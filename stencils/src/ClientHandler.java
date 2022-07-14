@@ -1,3 +1,5 @@
+import calculation.Color;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -10,37 +12,34 @@ import java.net.Socket;
 public class ClientHandler {
 
     private Socket s = null;
-    private InputStreamReader inputStream = null;
-    private OutputStreamWriter outputStream = null;
-    private BufferedReader bufferedReader = null;
-    private BufferedWriter bufferedWriter = null;
+    private ObjectOutputStream outputStream = null;
+    private ObjectInputStream inputStream = null;
 
 
     public ClientHandler(Socket s) {
         try {
             this.s = s;
-            inputStream = new InputStreamReader(s.getInputStream());
-            outputStream = new OutputStreamWriter(s.getOutputStream());
-            bufferedReader = new BufferedReader(inputStream);
-            bufferedWriter = new BufferedWriter(outputStream);
+            this.outputStream = new ObjectOutputStream(s.getOutputStream());
+            this.inputStream = new ObjectInputStream(s.getInputStream());
         }catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public String getResponse() {
+    public Object getResponse() {
         try {
-            return bufferedReader.readLine();
+            return this.inputStream.readObject();
         } catch (IOException e) {
             e.printStackTrace();
             return "";
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public void sendMessage(String msg) {
+    public void sendMessage(Color msg) {
         try {
-            bufferedWriter.write(msg+'\n');
-            bufferedWriter.flush();
+            this.outputStream.writeObject(msg);
         } catch (IOException e) {
             e.printStackTrace();
         }

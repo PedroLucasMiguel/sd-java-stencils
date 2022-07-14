@@ -1,6 +1,8 @@
 package calculation;
 
-public record Color(int r, int g, int b) {
+import java.io.Serializable;
+
+public record Color(int r, int g, int b) implements Serializable {
     public Color() {
         this(0, 0, 0);
     }

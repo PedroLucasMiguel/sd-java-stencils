@@ -1,7 +1,8 @@
+import calculation.Color;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
 
 public class Server {
 
@@ -26,7 +27,7 @@ public class Server {
         try {
             for (int i = 0; i < queueSize; i++) {
                 aux = ss.accept();
-                System.out.println("Connection " + (i+1) + "/" + queueSize + " accepted from: " + aux.getInetAddress());
+                System.out.println("Connection " + i+1 + "/" + queueSize + " accepted from: " + aux.getInetAddress());
                 clientQueue[i] = new ClientHandler(aux);
             }
         } catch (IOException e) {
@@ -35,19 +36,14 @@ public class Server {
     }
 
     private static void runActivity() {
-        Scanner sc = new Scanner(System.in);
+        // Enviando nomes
+        for (int i = 0; i < queueSize; i++) {
+            clientQueue[i].sendMessage(new Color(12,13,14));
+        }
 
-        while (true) {
-            // Enviando nomes
-            for (int i = 0; i < queueSize; i++) {
-                System.out.println("Name: ");
-                clientQueue[i].sendMessage(sc.nextLine());
-            }
-
-            // Recebendo nomes
-            for (int i = 0; i < queueSize; i++) {
-                System.out.println(clientQueue[i].getResponse());
-            }
+        // Recebendo nomes
+        for (int i = 0; i < queueSize; i++) {
+            System.out.println(clientQueue[i].getResponse());
         }
     }
 
