@@ -1,5 +1,4 @@
 import calculation.Color;
-import calculation.ColorMatrix;
 
 import java.io.*;
 import java.net.Socket;

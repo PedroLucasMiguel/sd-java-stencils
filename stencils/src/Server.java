@@ -2,7 +2,6 @@ import calculation.ColorMatrix;
 import utils.FileManager;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -10,14 +9,16 @@ import java.net.Socket;
 public class Server {
 
     private static ServerSocket ss = null;
+    private static final int port = 1212;
     private static ClientHandler[] clientQueue;
     private static int nClients = 1;
 
-    private static void initServer(int port, int qtdClients) {
+    private static void initServer(int qtdClients) {
         try {
             ss = new ServerSocket(port);
             nClients = qtdClients;
             clientQueue = new ClientHandler[nClients];
+            System.out.printf("Server started!\nExpecting %d connections...\n\n", nClients);
         } catch (IOException e) {
             System.out.println("Error while instantiating ServerSocket");
             e.printStackTrace();
@@ -38,18 +39,18 @@ public class Server {
         }
     }
 
-    private static ColorMatrix runActivity() {
+    private static ColorMatrix runActivity(String path, int nIteractions) {
 
         ColorMatrix matrix = null;
 
         try {
-            File f = new File("C:\\git\\sd-java-stencils\\stencils\\src\\utils\\img01.dat");
+            var f = new File(path).getAbsoluteFile();
             matrix = ColorMatrix.fromFile(f);
 
             var k = matrix.getInnerSize() / nClients;
 
-            for (int n = 0; n < 10000; n++) {
-                System.out.println("Iteration: " + (n+1));
+            for (int n = 0; n < nIteractions; n++) {
+                System.out.println("Iteration: " + (n + 1));
                 // Enviando os pedaços
                 for (int i = 0; i < nClients; i++) {
                     var auxMatrix = matrix.splice(i * k, k + 2);
@@ -63,8 +64,6 @@ public class Server {
                 }
 
             }
-
-            System.out.println(matrix);
 
             return matrix;
 
@@ -83,11 +82,21 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        initServer(1212, 8);
-        allowConnections();
-        var matrix = runActivity();
+        // Todo: Validation to string args?
+        if (args.length != 4) {
+            System.out.println("Correct use:");
+            System.out.println("java server <qtdClients> <inputFilePath> <nIteractions> <outputFilePath>");
+        } else {
+            initServer(Integer.parseInt(args[0]));
+            System.out.println("Initializing action...");
+            allowConnections();
+            var matrix = runActivity(args[1], Integer.parseInt(args[2]));
 
-        FileManager.toFile(matrix, "JOOOOOOOJ.dat");
+            FileManager.toFile(matrix, args[3]);
+
+            System.out.println("Finished");
+        }
+
     }
 
 }

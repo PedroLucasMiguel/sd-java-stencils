@@ -8,15 +8,20 @@ import java.net.SocketException;
 public class Client {
 
     private static Socket s = null;
+
+    private static final int port = 1212;
     private static ObjectOutputStream outputStream = null;
     private static ObjectInputStream inputStream = null;
 
-    private static void initializeClient(int port) {
-        try{
-            s = new Socket("localhost", port);
+    private static void initializeClient(String svAddr) {
+        try {
+            System.out.printf("Connecting to %s using port %d\n", svAddr, port);
+            s = new Socket(svAddr, port);
             outputStream = new ObjectOutputStream(s.getOutputStream());
             inputStream = new ObjectInputStream(s.getInputStream());
+            System.out.println("Connected.");
         } catch (IOException e) {
+            System.out.println("ERROR: Failed to create socket!");
             e.printStackTrace();
         }
     }
@@ -35,7 +40,7 @@ public class Client {
     private static void sendMessage(Color[][] matrix) throws SocketException {
         try {
             outputStream.writeObject(matrix);
-        }catch (SocketException e){
+        } catch (SocketException e) {
             throw e;
         } catch (IOException e) {
             e.printStackTrace();
@@ -54,13 +59,21 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        initializeClient(1212);
-        try {
-            while (true) {
-                sendMessage(receiveMessage());
+        // Todo: Validation to string args?
+        if (args.length != 1) {
+            System.out.println("Correct use: ");
+            System.out.println("java client <ip>");
+        } else {
+            initializeClient(args[0]);
+
+            try {
+                System.out.println("Initializing work....");
+                while (true) {
+                    sendMessage(receiveMessage());
+                }
+            } catch (SocketException e) {
+                System.out.println("Finished...");
             }
-        } catch (SocketException e) {
-            System.out.println("cabô");
         }
 
     }
