@@ -8,21 +8,18 @@ class CalculatorTest {
     }
 
     private static void testCalculation() {
-        final var theMatrix = new ColorMatrix(5, List.of(
+        final var colorMatrix = new ColorMatrix(5, List.of(
                 new FixedPoint(new Color(255, 0, 0), 2, 2)
         ));
 
-        final var matrix = theMatrix.splice(0, 7);
+        final var splicedMatrix = colorMatrix.splice(0, 7);
+        printMatrix(splicedMatrix, 7, 7);
 
-        printMatrix(matrix, 7, 7);
+        final var averagedMatrix = Calculator.innerCellStencilAverage(splicedMatrix, 7, 7);
+        printMatrix(averagedMatrix, 5, 5);
 
-        final var newMatrix = Calculator.innerCellStencilAverage(matrix, 7, 7);
-
-        printMatrix(newMatrix, 5, 5);
-
-        theMatrix.updateLines(newMatrix, 1, 5);
-
-        System.out.println(theMatrix);
+        colorMatrix.updateLines(averagedMatrix, 1);
+        System.out.println(colorMatrix);
     }
 
     private static void printMatrix(final Color[][] matrix, final int x, final int y) {
