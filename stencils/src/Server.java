@@ -1,6 +1,8 @@
 import calculation.ColorMatrix;
+import utils.FileManager;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -36,21 +38,21 @@ public class Server {
         }
     }
 
-    private static void runActivity() {
+    private static ColorMatrix runActivity() {
 
         ColorMatrix matrix = null;
 
         try {
-            File f = new File("C:\\git\\sd-java-stencils\\stencils\\src\\utils\\test.dat");
+            File f = new File("C:\\git\\sd-java-stencils\\stencils\\src\\utils\\img01.dat");
             matrix = ColorMatrix.fromFile(f);
 
             var k = matrix.getInnerSize() / nClients;
 
-            for (int n = 0; n < 10; n++) {
+            for (int n = 0; n < 10000; n++) {
                 System.out.println("Iteration: " + (n+1));
                 // Enviando os pedaços
                 for (int i = 0; i < nClients; i++) {
-                    var auxMatrix = matrix.splice(i * k, (i * k) + (k + 2));
+                    var auxMatrix = matrix.splice(i * k, k + 2);
                     clientQueue[i].sendMessage(auxMatrix);
                 }
 
@@ -64,6 +66,8 @@ public class Server {
 
             System.out.println(matrix);
 
+            return matrix;
+
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -74,12 +78,16 @@ public class Server {
             }
 
         }
+
+        return null;
     }
 
     public static void main(String[] args) {
-        initServer(1212, 2);
+        initServer(1212, 8);
         allowConnections();
-        runActivity();
+        var matrix = runActivity();
+
+        FileManager.toFile(matrix, "JOOOOOOOJ.dat");
     }
 
 }

@@ -66,23 +66,22 @@ public class ColorMatrix {
         }
     }
 
-    public Color[][] splice(final int startInclusive, final int endExclusive) {
-        final int len = endExclusive - startInclusive;
+    public Color[][] splice(final int start, final int len) {
         final var result = new Color[len][this.outerSize];
 
         for (int i = 0; i < len; ++i) {
-            result[i] = Arrays.copyOf(this.matrix[startInclusive + i], this.outerSize);
+            result[i] = Arrays.copyOf(this.matrix[start + i], this.outerSize);
         }
 
         return result;
     }
 
-    public void updateLines(final Color[][] matrix, final int startInclusive) {
+    public void updateLines(final Color[][] matrix, final int start) {
         for (int i = 0; i < matrix.length; ++i)
         {
             System.arraycopy(
                     matrix[i], 0,
-                    this.matrix[i + startInclusive], 1,
+                    this.matrix[i + start], 1,
                     this.innerSize
             );
         }
@@ -95,8 +94,8 @@ public class ColorMatrix {
     @Override
     public String toString() {
         final var sb = new StringBuilder();
-        for (int i = 0; i < this.outerSize; ++i) {
-            for (int j = 0; j < this.outerSize; ++j) {
+        for (int i = 1; i < this.innerSize; ++i) {
+            for (int j = 1; j < this.innerSize; ++j) {
                 sb.append(this.matrix[i][j]).append(' ');
             }
             sb.append('\n');

@@ -29,6 +29,6 @@ public record Color(int r, int g, int b) implements Serializable {
 
     @Override
     public String toString() {
-        return "(%3d, %3d, %3d)".formatted(this.r, this.g, this.b);
+        return "< %d, %d, %d >".formatted(this.r, this.g, this.b);
     }
 }
