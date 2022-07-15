@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ColorMatrix {
@@ -21,27 +20,30 @@ public class ColorMatrix {
         this.outerSize = innerSize + 2;
         this.matrix = new Color[this.outerSize][this.outerSize];
 
+        this.fillMatrix();
+        this.setFixedPoints();
+    }
+
+    private void fillMatrix() {
         for (final var arr : matrix)
             Arrays.fill(arr, new Color());
 
-        fillBorder();
-        refreshFixedPoints();
+        this.fillBorders();
     }
 
-    private void fillBorder() {
-        for (int i = 0, j = 0; j < this.outerSize; ++j) // TOP ROW
-            this.matrix[i][j] = ColorMatrix.gray;
-        for (int i = 0, j = 0; i < this.outerSize; ++i) // LEFT COL
-            this.matrix[i][j] = ColorMatrix.gray;
-        for (int i = this.outerSize - 1, j = 0; j < this.outerSize; ++j) // BOTTOM ROW
-            this.matrix[i][j] = ColorMatrix.gray;
-        for (int i = 0, j = this.outerSize - 1; i < this.outerSize; ++i) // RIGHT COL
-            this.matrix[i][j] = ColorMatrix.gray;
-    }
-
-    private void refreshFixedPoints() {
+    private void setFixedPoints() {
         this.fixedPoints.parallelStream()
                 .forEach(this::setFixedPoint);
+    }
+
+    private void fillBorders() {
+        // Fills top and bottom rows
+        Arrays.fill(this.matrix[0], ColorMatrix.gray);
+        Arrays.fill(this.matrix[this.outerSize - 1], ColorMatrix.gray);
+
+        // Fills first and last element of each row (i.e., fills the columns)
+        Arrays.stream(this.matrix)
+                .forEach(row -> row[0] = row[this.outerSize - 1] = ColorMatrix.gray);
     }
 
     private void setFixedPoint(final FixedPoint fp) {
@@ -56,15 +58,37 @@ public class ColorMatrix {
             final var fixedPoints =
                     IntStream.range(0, fixedPointCount)
                             .mapToObj(i -> FixedPoint.scanFixedPoint(s))
-                            .collect(Collectors.toList());
+                            .toList();
 
             return new ColorMatrix(matrixSize, fixedPoints);
         }
     }
 
+    public Color[][] splice(final int startInclusive, final int endExclusive) {
+        final int len = endExclusive - startInclusive;
+        final var result = new Color[len][this.outerSize];
+
+        for (int i = 0; i < len; ++i) {
+            result[i] = Arrays.copyOf(this.matrix[startInclusive + i], this.outerSize);
+        }
+
+        return result;
+    }
+
+    public void updateLines(final Color[][] matrix, final int startInclusive, final int lineCount) {
+        for (int i = 0; i < lineCount; ++i)
+        {
+            System.arraycopy(
+                    matrix[i], 0,
+                    this.matrix[i + startInclusive], 1,
+                    this.outerSize - 2
+            );
+        }
+    }
+
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        final var sb = new StringBuilder();
         for (int i = 0; i < this.outerSize; ++i) {
             for (int j = 0; j < this.outerSize; ++j) {
                 sb.append(this.matrix[i][j]).append(' ');
