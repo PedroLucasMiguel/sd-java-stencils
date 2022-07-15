@@ -15,7 +15,7 @@ class CalculatorTest {
         final var splicedMatrix = colorMatrix.splice(0, 7);
         printMatrix(splicedMatrix, 7, 7);
 
-        final var averagedMatrix = Calculator.innerCellStencilAverage(splicedMatrix, 7, 7);
+        final var averagedMatrix = Calculator.innerCellStencilAverage(splicedMatrix);
         printMatrix(averagedMatrix, 5, 5);
 
         colorMatrix.updateLines(averagedMatrix, 1);

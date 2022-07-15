@@ -3,7 +3,6 @@ import calculation.Color;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
 
 public class Client {
 
@@ -24,8 +23,7 @@ public class Client {
     private static Color[][] receiveMessage() {
         try {
             Color[][] aux = (Color[][]) inputStream.readObject();
-            var aux2 = Calculator.innerCellStencilAverage(aux, 7, 7);
-            return aux2;
+            return Calculator.innerCellStencilAverage(aux);
         } catch (IOException e) {
             return null;
         } catch (ClassNotFoundException e) {

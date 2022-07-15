@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 public class ColorMatrix {
     private final static Color gray = new Color(127, 127, 127);
     private final List<FixedPoint> fixedPoints;
+    private final int innerSize;
     private final int outerSize;
     private final Color[][] matrix;
 
@@ -17,6 +18,7 @@ public class ColorMatrix {
         this.fixedPoints = fixedPoints.parallelStream()
                 .map(fp -> new FixedPoint(fp.color(), fp.i() + 1, fp.j() + 1))
                 .toList();
+        this.innerSize = innerSize;
         this.outerSize = innerSize + 2;
         this.matrix = new Color[this.outerSize][this.outerSize];
 
@@ -75,15 +77,19 @@ public class ColorMatrix {
         return result;
     }
 
-    public void updateLines(final Color[][] matrix, final int startInclusive, final int lineCount) {
-        for (int i = 0; i < lineCount; ++i)
+    public void updateLines(final Color[][] matrix, final int startInclusive) {
+        for (int i = 0; i < matrix.length; ++i)
         {
             System.arraycopy(
                     matrix[i], 0,
                     this.matrix[i + startInclusive], 1,
-                    this.outerSize - 2
+                    this.innerSize
             );
         }
+    }
+
+    public int getInnerSize(){
+        return this.innerSize;
     }
 
     @Override

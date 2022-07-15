@@ -1,10 +1,10 @@
 package calculation;
 
 public class Calculator {
-    public static Color[][] innerCellStencilAverage(final Color[][] matrix, final int x, final int y) {
+    public static Color[][] innerCellStencilAverage(final Color[][] matrix) {
 
-        final int newX = x - 2;
-        final int newY = y - 2;
+        final int newX = matrix.length - 2;
+        final int newY = matrix[0].length - 2;
 
         final var result = new Color[newX][newY];
 
