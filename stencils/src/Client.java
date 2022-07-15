@@ -3,6 +3,7 @@ import calculation.Color;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class Client {
 
@@ -20,7 +21,7 @@ public class Client {
         }
     }
 
-    private static Color[][] receiveMessage() {
+    private static Color[][] receiveMessage() throws SocketException {
         try {
             Color[][] aux = (Color[][]) inputStream.readObject();
             return Calculator.innerCellStencilAverage(aux);
@@ -31,9 +32,11 @@ public class Client {
         }
     }
 
-    private static void sendMessage(Color[][] matrix) {
+    private static void sendMessage(Color[][] matrix) throws SocketException {
         try {
             outputStream.writeObject(matrix);
+        }catch (SocketException e){
+            throw e;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,7 +55,14 @@ public class Client {
 
     public static void main(String[] args) {
         initializeClient(1212);
-        sendMessage(receiveMessage());
+        try {
+            while (true) {
+                sendMessage(receiveMessage());
+            }
+        } catch (SocketException e) {
+            System.out.println("cabô");
+        }
+
     }
 
 }

@@ -46,7 +46,7 @@ public class Server {
 
             var k = matrix.getInnerSize() / nClients;
 
-            for (int n = 0; n < 1; n++) {
+            for (int n = 0; n < 10; n++) {
                 System.out.println("Iteration: " + (n+1));
                 // Enviando os pedaços
                 for (int i = 0; i < nClients; i++) {
