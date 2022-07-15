@@ -1,4 +1,5 @@
 import calculation.Color;
+import calculation.ColorMatrix;
 
 import java.io.*;
 import java.net.Socket;
@@ -26,18 +27,18 @@ public class ClientHandler {
         }
     }
 
-    public Object getResponse() {
+    public Color[][] getResponse() {
         try {
-            return this.inputStream.readObject();
+            return (Color[][]) this.inputStream.readObject();
         } catch (IOException e) {
             e.printStackTrace();
-            return "";
+            return null;
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void sendMessage(Color msg) {
+    public void sendMessage(Color[][] msg) {
         try {
             this.outputStream.writeObject(msg);
         } catch (IOException e) {
