@@ -6,8 +6,10 @@ import java.util.Scanner;
 import image.ImageDelegate;
 
 public class ServerMain {
-    static final int ITERATION_COUNT = 100;
-    private static final String INPUT_FILE_PATH = "testImage256.dat";
+    public static final int PORT = 5000;
+    public static final int CLIENT_COUNT = 2;
+    static final int ITERATION_COUNT = 10000;
+    private static final String INPUT_FILE_PATH = "/home/mathrpg/College/DistributedStencil/resources/testImage256.dat";
     private static final String OUTPUT_FILE_PATH = "out-testImage256.dat";
 
     public static void main(String[] args) {
@@ -17,13 +19,21 @@ public class ServerMain {
         final var imageDelegate = getImageFromFile();
         final var finalImage = server.runProcedure(imageDelegate, ITERATION_COUNT);
         outputImageToFile(finalImage, OUTPUT_FILE_PATH);
+
+        try {
+            server.closeConnections();
+        } catch (IOException e) {
+            System.out.println("Fatal error");
+            throw new RuntimeException(e);
+        }
     }
 
     private static Server initAndConnectServer() {
         System.out.println("Initializing server");
         try {
-            final var server = new Server(5000, 1);
-            server.allowConnections();
+            final var server = new Server(PORT, CLIENT_COUNT);
+            server.openConnections();
+            System.out.println("Server initialized successfully");
             return server;
         } catch (IOException e) {
             System.out.println("Critial error, aborting");

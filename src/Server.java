@@ -11,16 +11,16 @@ public class Server {
     private final int port;
     private final int clientCount;
     private final ServerSocket serverSocket;
-    private final Socket[] clientSockets;
+    private final ClientHandler[] clients;
 
     public Server(int port, int clientCount) throws IOException {
         this.port = port;
         this.clientCount = clientCount;
         this.serverSocket = new ServerSocket(this.port);
-        this.clientSockets = new Socket[clientCount];
+        this.clients = new ClientHandler[clientCount];
     }
 
-    public void allowConnections() throws IOException {
+    public void openConnections() throws IOException {
         System.out.println("Listening for connections on port " + port);
 
         for (int i = 0; i < clientCount; ++i) {
@@ -30,7 +30,15 @@ public class Server {
                     i + 1, clientCount,
                     socket.getInetAddress().toString()
             );
-            this.clientSockets[i] = socket;
+            this.clients[i] = new ClientHandler(socket);
+        }
+    }
+
+    public void closeConnections() throws IOException {
+        System.out.println("Closing client connections");
+
+        for (int i = 0; i < clientCount; ++i) {
+            this.clients[i].close();
         }
     }
 
@@ -38,7 +46,8 @@ public class Server {
         System.out.println("Starting procedure");
 
         for (int iter = 1; iter <= iterationCount; ++iter) {
-            System.out.printf("Running iteration #%d\n", iter);
+            if (iter % 10 == 0)
+                System.out.printf("Running iteration #%d\n", iter);
 
             final var images = imageDelegate.split(clientCount);
             writeSegmentsToClients(images);
@@ -54,8 +63,8 @@ public class Server {
     private Image[] readSegmentsFromClients() {
         final var newImages = new Image[clientCount];
         for (int i = 0; i < clientCount; ++i) {
-            try (final var is = new ObjectInputStream(this.clientSockets[i].getInputStream())) {
-                newImages[i] = (Image) is.readObject();
+            try {
+                newImages[i] = this.clients[i].readImage();
             } catch (IOException | ClassNotFoundException e) {
                 System.out.printf("Failure in reading from client #%d\n", i + 1);
                 throw new RuntimeException(e);
@@ -64,14 +73,40 @@ public class Server {
         return newImages;
     }
 
-    private void writeSegmentsToClients(Image[] images) {
+    private void writeSegmentsToClients(final Image[] images) {
         for (int i = 0; i < clientCount; ++i) {
-            try (final var os = new ObjectOutputStream(this.clientSockets[i].getOutputStream())) {
-                os.writeObject(images[i]);
+            try {
+                this.clients[i].writeImage(images[i]);
             } catch (IOException e) {
                 System.out.printf("Failure in writing to client #%d\n", i + 1);
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    private final class ClientHandler {
+        private final Socket socket;
+        private final ObjectOutputStream outputStream;
+        private final ObjectInputStream inputStream;
+
+        public ClientHandler(final Socket socket) throws IOException {
+            this.socket = socket;
+            this.outputStream = new ObjectOutputStream(this.socket.getOutputStream());
+            this.inputStream = new ObjectInputStream(this.socket.getInputStream());
+        }
+
+        public Image readImage() throws IOException, ClassNotFoundException {
+            return (Image) this.inputStream.readObject();
+        }
+
+        public void writeImage(final Image image) throws IOException {
+            this.outputStream.writeObject(image);
+        }
+
+        public void close() throws IOException {
+            this.socket.close();
+            this.outputStream.close();
+            this.inputStream.close();
         }
     }
 }

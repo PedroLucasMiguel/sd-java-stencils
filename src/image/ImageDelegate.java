@@ -1,5 +1,6 @@
 package image;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -63,7 +64,7 @@ public class ImageDelegate {
         for (int i = 0; i < n; ++i) {
             final int startIndex = i * offset;
             final int finalIndex = startIndex + outerSize;
-            images[0] = new Image(
+            images[i] = new Image(
                     Arrays.copyOfRange(image.reds, startIndex, finalIndex),
                     Arrays.copyOfRange(image.greens, startIndex, finalIndex),
                     Arrays.copyOfRange(image.blues, startIndex, finalIndex)
@@ -98,7 +99,7 @@ public class ImageDelegate {
         return image;
     }
 
-    public static class Image {
+    public static final class Image implements Serializable {
         int[][] reds;
         int[][] greens;
         int[][] blues;
