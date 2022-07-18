@@ -31,8 +31,9 @@ public class ImageDelegate {
 
     public void updateImageFixedPoints() {
         fixedPoints.parallelStream().forEach(fp -> {
-            int i = fp.i() + 1;
-            int j = fp.j() + 1;
+            // TODO: Check if should have offset or not
+            int i = fp.i();
+            int j = fp.j();
             for (int ch = 0; ch < 3; ++ch) {
                 image.channels[ch][i][j] = fp.getChannelFor(ch);
             }

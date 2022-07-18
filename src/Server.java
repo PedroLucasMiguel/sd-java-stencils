@@ -10,7 +10,7 @@ import image.ImageDelegate;
 import image.ImageDelegate.Image;
 
 public class Server {
-    public static final int PRINT_EVERY_NTH_ITERATION = 100;
+    public static final int PRINT_EVERY_NTH_ITERATION = 50;
     private final int port;
     private final int clientCount;
     private final ServerSocket serverSocket;
