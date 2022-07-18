@@ -8,9 +8,9 @@ import image.ImageDelegate.Image;
 
 public class ServerMain {
     public static final int PORT = 5000;
-    public static final int CLIENT_COUNT = 2;
+    public static final int CLIENT_COUNT = 4;
     static final int ITERATION_COUNT = 10000;
-    private static final String INPUT_FILE_PATH = "/home/mathrpg/College/DistributedStencil/resources/testImage256.dat";
+    private static final String INPUT_FILE_PATH = "C:\\git\\sd-java-stencils\\resources\\testImage256.dat";
     private static final String OUTPUT_FILE_PATH = "out-testImage256.dat";
 
     public static void main(String[] args) {

@@ -37,6 +37,7 @@ public class Client {
             try {
 //                System.out.println("Sending object back to server");
                 this.outputStream.writeObject(image);
+                this.outputStream.reset();
 //                System.out.println("Sucess");
             } catch (IOException e) {
                 System.out.println("Error writing to server");
