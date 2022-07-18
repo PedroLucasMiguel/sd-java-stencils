@@ -63,7 +63,7 @@ public class ImageDelegate {
 
         for (int i = 0; i < n; ++i) {
             final int startIndex = i * offset;
-            final int finalIndex = startIndex + outerSize;
+            final int finalIndex = startIndex + offset + 2;
             images[i] = new Image(
                     Arrays.copyOfRange(image.reds, startIndex, finalIndex),
                     Arrays.copyOfRange(image.greens, startIndex, finalIndex),
@@ -110,22 +110,48 @@ public class ImageDelegate {
             this.blues = blues;
         }
 
-        private static void averageNeighbors(final int[][] matrix, final int i, final int j) {
-            matrix[i][j] = (matrix[i][j]
-                    + matrix[i - 1][j]
-                    + matrix[i][j - 1]
-                    + matrix[i + 1][j]
-                    + matrix[i][j + 1]) / 5;
+        private static int neighborsAverageOrBorder(final int[][] src, final int i, final int j) {
+            if (i == 0 || j == 0 || i == src.length - 1 || j == src[0].length - 1)
+                return src[i][j];
+
+            return (src[i][j]
+                    + src[i - 1][j]
+                    + src[i][j - 1]
+                    + src[i + 1][j]
+                    + src[i][j + 1]) / 5;
         }
 
         public void doStencilIteration() {
-            for (int i = 1; i < reds.length - 1; ++i) {
-                for (int j = 1; j < reds[0].length - 1; ++j) {
-                    averageNeighbors(reds, i, j);
-                    averageNeighbors(greens, i, j);
-                    averageNeighbors(blues, i, j);
+            this.reds = doStencilIterationForMatrix(reds);
+            this.greens = doStencilIterationForMatrix(greens);
+            this.blues = doStencilIterationForMatrix(blues);
+        }
+
+        private int[][] doStencilIterationForMatrix(int[][] target) {
+            final var width = target.length;
+            final var height = target[0].length;
+
+            final var newMatrix = new int[width][height];
+
+            for (int i = 0; i < width; ++i) {
+                for (int j = 0; j < height; ++j) {
+                    newMatrix[i][j] = neighborsAverageOrBorder(target, i, j);
                 }
             }
+
+            return newMatrix;
+        }
+
+        @Override
+        public String toString() {
+            final var sb = new StringBuilder();
+            for (int i = 0; i < reds.length; ++i) {
+                for (int j = 0; j < reds[0].length; ++j) {
+                    sb.append("< %d, %d, %d > ".formatted(reds[i][j], greens[i][j], blues[i][j]));
+                }
+                sb.append('\n');
+            }
+            return sb.toString();
         }
     }
 }

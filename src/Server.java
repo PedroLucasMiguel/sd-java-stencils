@@ -8,6 +8,7 @@ import image.ImageDelegate;
 import image.ImageDelegate.Image;
 
 public class Server {
+    public static final int PRINT_EVERY_NTH_ITERATION = 100;
     private final int port;
     private final int clientCount;
     private final ServerSocket serverSocket;
@@ -46,14 +47,35 @@ public class Server {
         System.out.println("Starting procedure");
 
         for (int iter = 1; iter <= iterationCount; ++iter) {
-            if (iter % 10 == 0)
+            if (iter % PRINT_EVERY_NTH_ITERATION == 0)
                 System.out.printf("Running iteration #%d\n", iter);
 
             final var images = imageDelegate.split(clientCount);
+
+//            System.out.println("Sending images:");
+//            System.out.println('[');
+//            for (final var image : images) {
+//                System.out.println(image);
+//                System.out.println(',');
+//            }
+//            System.out.println(']');
+
             writeSegmentsToClients(images);
 
             final var segments = readSegmentsFromClients();
+
+//            System.out.println("Received images:");
+//            System.out.println('[');
+//            for (final var image : segments) {
+//                System.out.println(image);
+//                System.out.println(',');
+//            }
+//            System.out.println(']');
+
             imageDelegate.merge(segments);
+
+//            System.out.println("Merged segments (w/ update):");
+//            System.out.println(imageDelegate.getImage());
         }
 
         System.out.println("Procedure finished");

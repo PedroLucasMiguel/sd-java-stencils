@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Scanner;
 
 import image.ImageDelegate;
+import image.ImageDelegate.Image;
 
 public class ServerMain {
     public static final int PORT = 5000;
@@ -18,6 +19,10 @@ public class ServerMain {
         final var server = initAndConnectServer();
         final var imageDelegate = getImageFromFile();
         final var finalImage = server.runProcedure(imageDelegate, ITERATION_COUNT);
+
+        System.out.println("Final image:");
+        System.out.println(finalImage);
+
         outputImageToFile(finalImage, OUTPUT_FILE_PATH);
 
         try {
@@ -56,7 +61,7 @@ public class ServerMain {
         return imageDelegate;
     }
 
-    private static void outputImageToFile(final ImageDelegate.Image finalImage, final String outputFilePath) {
+    private static void outputImageToFile(final Image finalImage, final String outputFilePath) {
         System.out.printf("Outputing image to %s\n", outputFilePath);
     }
 }
