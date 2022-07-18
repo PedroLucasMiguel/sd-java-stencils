@@ -3,6 +3,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import image.ImageDelegate;
 import image.ImageDelegate.Image;
@@ -31,7 +33,7 @@ public class Server {
                     i + 1, clientCount,
                     socket.getInetAddress().toString()
             );
-            this.clients[i] = new ClientHandler(socket);
+            this.clients[i] = new ClientHandler(i + 1, socket);
         }
     }
 
@@ -83,35 +85,37 @@ public class Server {
     }
 
     private Image[] readSegmentsFromClients() {
-        final var newImages = new Image[clientCount];
-        for (int i = 0; i < clientCount; ++i) {
-            try {
-                newImages[i] = this.clients[i].readImage();
-            } catch (IOException | ClassNotFoundException e) {
-                System.out.printf("Failure in reading from client #%d\n", i + 1);
-                throw new RuntimeException(e);
-            }
-        }
-        return newImages;
+        return Arrays.stream(this.clients).parallel()
+                .map(client -> {
+                    try {
+                        return client.readImage();
+                    } catch (IOException | ClassNotFoundException e) {
+                        System.out.println("Failure in reading from " + client);
+                        throw new RuntimeException(e);
+                    }
+                }).toArray(Image[]::new);
     }
 
     private void writeSegmentsToClients(final Image[] images) {
-        for (int i = 0; i < clientCount; ++i) {
-            try {
-                this.clients[i].writeImage(images[i]);
-            } catch (IOException e) {
-                System.out.printf("Failure in writing to client #%d\n", i + 1);
-                throw new RuntimeException(e);
-            }
-        }
+        IntStream.range(0, clientCount).parallel()
+                .forEach(i -> {
+                    try {
+                        this.clients[i].writeImage(images[i]);
+                    } catch (IOException e) {
+                        System.out.println("Failure in writing to " + this.clients[i]);
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
-    private final class ClientHandler {
+    private static final class ClientHandler {
+        private final int id;
         private final Socket socket;
         private final ObjectOutputStream outputStream;
         private final ObjectInputStream inputStream;
 
-        public ClientHandler(final Socket socket) throws IOException {
+        public ClientHandler(int id, final Socket socket) throws IOException {
+            this.id = id;
             this.socket = socket;
             this.outputStream = new ObjectOutputStream(this.socket.getOutputStream());
             this.inputStream = new ObjectInputStream(this.socket.getInputStream());
@@ -129,6 +133,11 @@ public class Server {
             this.socket.close();
             this.outputStream.close();
             this.inputStream.close();
+        }
+
+        @Override
+        public String toString() {
+            return "Client #" + id;
         }
     }
 }
