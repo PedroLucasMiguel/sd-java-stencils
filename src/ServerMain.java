@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -7,9 +8,9 @@ import image.ImageDelegate;
 import image.ImageDelegate.Image;
 
 public class ServerMain {
-    public static int PORT;
-    public static int CLIENT_COUNT = 4;
     static final int ITERATION_COUNT = 10000;
+    public static int PORT;
+    public static int CLIENT_COUNT;
     private static String INPUT_FILE_PATH;
     private static String OUTPUT_FILE_PATH;
 
@@ -32,10 +33,7 @@ public class ServerMain {
         final var imageDelegate = getImageFromFile();
         final var finalImage = server.runProcedure(imageDelegate, ITERATION_COUNT);
 
-        System.out.println("Final image:");
-        System.out.println(finalImage);
-
-        outputImageToFile(finalImage, OUTPUT_FILE_PATH);
+        outputImageToFile(finalImage);
 
         try {
             server.closeConnections();
@@ -70,7 +68,13 @@ public class ServerMain {
         }
     }
 
-    private static void outputImageToFile(final Image finalImage, final String outputFilePath) {
-        System.out.printf("Outputing image to %s\n", outputFilePath);
+    private static void outputImageToFile(final Image finalImage) {
+        try (final var fw = new FileWriter(OUTPUT_FILE_PATH)) {
+            System.out.println("Output image to " + OUTPUT_FILE_PATH);
+            fw.write(finalImage.toString());
+        } catch (IOException e) {
+            System.out.println("Unable to write to file");
+            throw new RuntimeException(e);
+        }
     }
 }
