@@ -127,6 +127,7 @@ public class Server {
 
         public void writeImage(final Image image) throws IOException {
             this.outputStream.writeObject(image);
+            this.outputStream.reset();
         }
 
         public void close() throws IOException {

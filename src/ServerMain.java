@@ -7,13 +7,25 @@ import image.ImageDelegate;
 import image.ImageDelegate.Image;
 
 public class ServerMain {
-    public static final int PORT = 5000;
-    public static final int CLIENT_COUNT = 2;
+    public static int PORT;
+    public static int CLIENT_COUNT = 4;
     static final int ITERATION_COUNT = 10000;
-    private static final String INPUT_FILE_PATH = "/home/mathrpg/College/DistributedStencil/resources/testImage256.dat";
-    private static final String OUTPUT_FILE_PATH = "out-testImage256.dat";
+    private static String INPUT_FILE_PATH;
+    private static String OUTPUT_FILE_PATH;
 
     public static void main(String[] args) {
+
+        if (args.length != 4) {
+            System.out.println("ServerMain help:");
+            System.out.println("    java ServerMain <PORT> <N_CLIENTS> <INPUT_FILE_PATH> <OUTPUT_FILE_PATH>");
+            return;
+        } else {
+            PORT = Integer.parseInt(args[0]);
+            CLIENT_COUNT = Integer.parseInt(args[1]);
+            INPUT_FILE_PATH = args[2];
+            OUTPUT_FILE_PATH = args[3];
+        }
+
         System.out.println("Starting program");
 
         final var server = initAndConnectServer();
