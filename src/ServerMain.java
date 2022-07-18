@@ -47,10 +47,8 @@ public class ServerMain {
     }
 
     private static ImageDelegate getImageFromFile() {
-        final ImageDelegate imageDelegate;
-
         try (final var s = new Scanner(new File(INPUT_FILE_PATH))) {
-            imageDelegate = ImageDelegate.fromScanner(s);
+            return ImageDelegate.fromScanner(s);
         } catch (FileNotFoundException e) {
             System.out.printf("File %s not found\n", INPUT_FILE_PATH);
             throw new RuntimeException(e);
@@ -58,7 +56,6 @@ public class ServerMain {
             System.out.println("Error reading file");
             throw new RuntimeException(e);
         }
-        return imageDelegate;
     }
 
     private static void outputImageToFile(final Image finalImage, final String outputFilePath) {
