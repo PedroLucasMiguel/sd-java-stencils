@@ -75,6 +75,7 @@ public class Server {
 //            System.out.println(']');
 
             imageDelegate.merge(segments);
+            imageDelegate.updateImageFixedPoints();
 
 //            System.out.println("Merged segments (w/ update):");
 //            System.out.println(imageDelegate.getImage());

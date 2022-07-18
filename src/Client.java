@@ -21,31 +21,43 @@ public class Client {
         System.out.println("Running...");
 
         while (true) {
-            final Image image;
+            final var image = readImage();
 
-            try {
-//                System.out.println("Receiving object from server");
-                image = (Image) this.inputStream.readObject();
-//                System.out.println("Success");
-            } catch (EOFException e) {
+            if (image == null) {
                 System.out.println("Server sent no more objects, closing");
                 return;
-            } catch (IOException | ClassNotFoundException e) {
-                System.out.println("Error reading from server");
-                throw new RuntimeException(e);
             }
 
             image.doStencilIteration();
 
-            try {
-//                System.out.println("Sending object back to server");
-                this.outputStream.writeObject(image);
-                this.outputStream.reset();
-//                System.out.println("Sucess");
-            } catch (IOException e) {
-                System.out.println("Error writing to server");
-                throw new RuntimeException(e);
-            }
+            writeImage(image);
         }
+    }
+
+    private Image readImage() {
+        try {
+            return (Image) this.inputStream.readObject();
+        } catch (EOFException e) {
+            return null;
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error reading from server");
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void writeImage(Image image) {
+        try {
+            this.outputStream.writeObject(image);
+            this.outputStream.reset();
+        } catch (IOException e) {
+            System.out.println("Error writing to server");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void closeConnection() throws IOException {
+        socket.close();
+        outputStream.close();
+        inputStream.close();
     }
 }

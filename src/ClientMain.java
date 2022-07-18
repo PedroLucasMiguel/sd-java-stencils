@@ -21,6 +21,7 @@ public class ClientMain {
         try {
             final var client = new Client(IP, PORT);
             client.listenAndProcess();
+            client.closeConnection();
         } catch (IOException e) {
             System.out.println("Error in client");
             throw new RuntimeException(e);

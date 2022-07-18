@@ -9,15 +9,13 @@ import java.util.stream.IntStream;
 public class ImageDelegate {
     private static final int GRAY = 127;
     private final int innerSize;
-    private final int outerSize;
     private final List<FixedPoint> fixedPoints;
     private final Image image;
 
     public ImageDelegate(final int imageSize, final List<FixedPoint> fixedPoints) {
         this.innerSize = imageSize;
-        this.outerSize = imageSize + 2;
         this.fixedPoints = fixedPoints;
-        this.image = Image.grayBorderedImage(this.outerSize);
+        this.image = Image.grayBorderedImage(imageSize + 2);
         updateImageFixedPoints();
     }
 
@@ -31,7 +29,7 @@ public class ImageDelegate {
         return new ImageDelegate(imageSize, fixedPoints);
     }
 
-    private void updateImageFixedPoints() {
+    public void updateImageFixedPoints() {
         fixedPoints.parallelStream().forEach(fp -> {
             int i = fp.i() + 1;
             int j = fp.j() + 1;
@@ -43,38 +41,40 @@ public class ImageDelegate {
 
     public Image[] split(final int n) {
         final int offset = innerSize / n;
-        final var images = new Image[n];
 
-        for (int i = 0; i < n; ++i) {
-            final int startIndex = i * offset;
-            final int finalIndex = startIndex + offset + 2;
-            images[i] = new Image(new int[][][]{
-                    Arrays.copyOfRange(image.channels[0], startIndex, finalIndex),
-                    Arrays.copyOfRange(image.channels[1], startIndex, finalIndex),
-                    Arrays.copyOfRange(image.channels[2], startIndex, finalIndex)
-            });
-        }
-
-        return images;
+        return IntStream.range(0, n).parallel()
+                .mapToObj(i -> {
+                    final int startIndex = i * offset;
+                    final int endIndex = startIndex + offset + 2;
+                    return new Image(
+                            Arrays.copyOfRange(image.channels[0], startIndex, endIndex),
+                            Arrays.copyOfRange(image.channels[1], startIndex, endIndex),
+                            Arrays.copyOfRange(image.channels[2], startIndex, endIndex)
+                    );
+                }).toArray(Image[]::new);
     }
 
     public void merge(final Image[] segments) {
         final int count = segments.length;
         final int offset = innerSize / count;
-        final int width = segments[0].getWidth();
-        final int height = segments[0].getHeight();
 
-        for (int im = 0; im < count; ++im) {
-            for (int ch = 0; ch < 3; ++ch) {
-                for (int i = 1; i < width - 1; ++i) {
-                    for (int j = 1; j < height - 1; ++j) {
-                        this.image.channels[ch][offset * im + i][j] = segments[im].channels[ch][i][j];
-                    }
-                }
-            }
-        }
+        IntStream.range(0, count)
+                .parallel()
+                .forEach(im -> updateImageWithSegment(segments[im], offset * im));
+    }
 
-        updateImageFixedPoints();
+    private void updateImageWithSegment(final Image segment, final int iOffset) {
+        IntStream.range(0, 3)
+                .parallel()
+                .forEach(ch -> updateChannelWithSegment(ch, segment, iOffset));
+    }
+
+    private void updateChannelWithSegment(final int ch, final Image segment, final int iOffset) {
+        System.arraycopy(
+                segment.channels[ch], 1, // Source, offset
+                this.image.channels[ch], iOffset + 1, // Destination, offset
+                segment.getWidth() - 2 // How many arrays to copy (leave borders)
+        );
     }
 
     public Image getImage() {
@@ -88,8 +88,12 @@ public class ImageDelegate {
             this.channels = channels;
         }
 
+        public Image(final int[][] redChannel, final int[][] greenChannel, final int[][] blueChannel) {
+            this(new int[][][]{redChannel, greenChannel, blueChannel});
+        }
+
         private static int neighborsAverageOrBorder(final int[][] src, final int i, final int j) {
-            if (i == 0 || j == 0 || i == src.length - 1 || j == src[0].length - 1)
+            if (coordinateIsBorder(src, i, j))
                 return src[i][j];
 
             return (src[i][j]
@@ -99,7 +103,11 @@ public class ImageDelegate {
                     + src[i][j + 1]) / 5;
         }
 
-        private static int[][] borderedMatrix(final int size) {
+        private static boolean coordinateIsBorder(int[][] src, int i, int j) {
+            return i == 0 || j == 0 || i == src.length - 1 || j == src[0].length - 1;
+        }
+
+        private static int[][] grayBorderedChannel(final int size) {
             final var matrix = new int[size][size];
             Arrays.fill(matrix[0], GRAY);
             Arrays.fill(matrix[size - 1], GRAY);
@@ -109,19 +117,20 @@ public class ImageDelegate {
         }
 
         private static Image grayBorderedImage(final int imageSize) {
-            final var reds = borderedMatrix(imageSize);
-            final var greens = borderedMatrix(imageSize);
-            final var blues = borderedMatrix(imageSize);
-            return new Image(new int[][][]{reds, greens, blues});
+            return new Image(
+                    grayBorderedChannel(imageSize),
+                    grayBorderedChannel(imageSize),
+                    grayBorderedChannel(imageSize)
+            );
         }
 
         public void doStencilIteration() {
             for (int i = 0; i < 3; ++i) {
-                this.channels[i] = doStencilIterationForMatrix(this.channels[i]);
+                this.channels[i] = doStencilIterationForChannel(this.channels[i]);
             }
         }
 
-        private int[][] doStencilIterationForMatrix(int[][] target) {
+        private int[][] doStencilIterationForChannel(int[][] channel) {
             final var width = getWidth();
             final var height = getHeight();
 
@@ -129,7 +138,7 @@ public class ImageDelegate {
 
             for (int i = 0; i < width; ++i) {
                 for (int j = 0; j < height; ++j) {
-                    newMatrix[i][j] = neighborsAverageOrBorder(target, i, j);
+                    newMatrix[i][j] = neighborsAverageOrBorder(channel, i, j);
                 }
             }
 
