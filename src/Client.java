@@ -18,6 +18,7 @@ public class Client {
     }
 
     public void listenAndProcess() {
+        // Inicializa o precesso de espera de mensagens pelo servidor, calculo e envio do resultado.
         System.out.println("Running...");
 
         while (true) {
@@ -35,6 +36,7 @@ public class Client {
     }
 
     private Image readImage() {
+        // Lê a mensagem enviada pelo servidor
         try {
             return (Image) this.inputStream.readObject();
         } catch (EOFException e) {
@@ -46,6 +48,7 @@ public class Client {
     }
 
     private void writeImage(Image image) {
+        // Envia a matriz "processada" de volta ao servidor
         try {
             this.outputStream.writeObject(image);
             this.outputStream.reset();
@@ -56,6 +59,7 @@ public class Client {
     }
 
     public void closeConnection() throws IOException {
+        // Fecha as conexões
         socket.close();
         outputStream.close();
         inputStream.close();

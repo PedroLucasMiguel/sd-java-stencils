@@ -16,6 +16,17 @@ public class ServerMain {
 
     public static void main(String[] args) {
 
+        /*
+         * Argumentos esperados para execução do servidor:
+         * - Porta de conexão
+         * - N° de clientes esperados para realizar o processo
+         * - Diretório do arquivo de entrada
+         * - Diretório para o arquivo de saída
+         *
+         * OBS:
+         * - O tamanho da imagem representada pelo arquivo deve ser divisível pelo número de clientes!
+         * */
+
         if (args.length != 4) {
             System.out.println("ServerMain help:");
             System.out.println("\tjava ServerMain <PORT> <N_CLIENTS> <INPUT_FILE_PATH> <OUTPUT_FILE_PATH>");
@@ -30,9 +41,14 @@ public class ServerMain {
         System.out.println("Starting program");
 
         final var server = initAndConnectServer();
+
+        // Lendo arquivo de entrada
         final var imageDelegate = getImageFromFile();
+
+        // Iniciando processo
         final var finalImage = server.runProcedure(imageDelegate, ITERATION_COUNT);
 
+        // Escrevendo arquivo de sáida
         outputImageToFile(finalImage);
 
         try {
@@ -44,6 +60,7 @@ public class ServerMain {
     }
 
     private static Server initAndConnectServer() {
+        // Inicializando conexão com o servidor
         System.out.println("Initializing server");
         try {
             final var server = new Server(PORT, CLIENT_COUNT);
@@ -57,6 +74,7 @@ public class ServerMain {
     }
 
     private static ImageDelegate getImageFromFile() {
+        // Lendo arquivo de entrada
         try (final var s = new Scanner(new File(INPUT_FILE_PATH))) {
             return ImageDelegate.fromScanner(s);
         } catch (FileNotFoundException e) {
@@ -69,6 +87,7 @@ public class ServerMain {
     }
 
     private static void outputImageToFile(final Image finalImage) {
+        // Escrevendo arquivo de saída
         try (final var fw = new FileWriter(OUTPUT_FILE_PATH)) {
             System.out.println("Output image to " + OUTPUT_FILE_PATH);
             fw.write(finalImage.toString());

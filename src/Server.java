@@ -10,11 +10,11 @@ import image.ImageDelegate;
 import image.ImageDelegate.Image;
 
 public class Server {
-    public static final int PRINT_EVERY_NTH_ITERATION = 100;
+    public static final int PRINT_EVERY_NTH_ITERATION = 100; // N° de iterações necessária entre prints de debug
     private final int port;
-    private final int clientCount;
+    private final int clientCount; // Quantidade de clientes esperada
     private final ServerSocket serverSocket;
-    private final ClientHandler[] clients;
+    private final ClientHandler[] clients; // "Lista" de clientes
 
     public Server(int port, int clientCount) throws IOException {
         this.port = port;
@@ -24,6 +24,7 @@ public class Server {
     }
 
     public void openConnections() throws IOException {
+        // Inicia o processo de espera por conexões por parte do servidor
         System.out.println("Listening for connections on port " + port);
 
         for (int i = 0; i < clientCount; ++i) {
@@ -38,6 +39,7 @@ public class Server {
     }
 
     public void closeConnections() throws IOException {
+        // Finaliza todas as conexões após a execução do processo
         System.out.println("Closing client connections");
 
         for (int i = 0; i < clientCount; ++i) {
@@ -46,39 +48,24 @@ public class Server {
     }
 
     public Image runProcedure(final ImageDelegate imageDelegate, final int iterationCount) {
+        // Inicializa o procedimento
         System.out.println("Starting procedure");
 
         for (int iter = 1; iter <= iterationCount; ++iter) {
             if (iter % PRINT_EVERY_NTH_ITERATION == 0)
                 System.out.printf("Running iteration #%d\n", iter);
 
+            // Realiza o "split" da imagem e envia os pedaços para os clientes conectados
             final var images = imageDelegate.split(clientCount);
-
-//            System.out.println("Sending images:");
-//            System.out.println('[');
-//            for (final var image : images) {
-//                System.out.println(image);
-//                System.out.println(',');
-//            }
-//            System.out.println(']');
-
             writeSegmentsToClients(images);
 
+            // Espera a resposta dos clientes
             final var segments = readSegmentsFromClients();
 
-//            System.out.println("Received images:");
-//            System.out.println('[');
-//            for (final var image : segments) {
-//                System.out.println(image);
-//                System.out.println(',');
-//            }
-//            System.out.println(']');
-
+            // Junta as respostas e atualiza a matriz
             imageDelegate.merge(segments);
             imageDelegate.updateImageFixedPoints();
 
-//            System.out.println("Merged segments (w/ update):");
-//            System.out.println(imageDelegate.getImage());
         }
 
         System.out.println("Procedure finished");
@@ -86,6 +73,7 @@ public class Server {
     }
 
     private Image[] readSegmentsFromClients() {
+        // Salva as respostas dos clientes em um "Java Array" para futuras manipulações
         return Arrays.stream(this.clients)
                 .parallel()
                 .map(client -> {
@@ -99,6 +87,7 @@ public class Server {
     }
 
     private void writeSegmentsToClients(final Image[] images) {
+        // Reliza o envio dos "pedaços" da matriz para cada cliente
         IntStream.range(0, clientCount)
                 .parallel()
                 .forEach(i -> {
@@ -110,6 +99,14 @@ public class Server {
                     }
                 });
     }
+
+    /*
+    * A classe "ClientHandler" é utilizada para realizar a manipulação
+    * de clientes que posteriormente se conectatem ao servidor.
+    *
+    * Essa classe salva o socket responsável pela comunicação, além de
+    * criar os canais de comunicação em si.
+    * */
 
     private static final class ClientHandler {
         private final int id;

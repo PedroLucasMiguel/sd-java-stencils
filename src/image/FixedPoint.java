@@ -2,6 +2,10 @@ package image;
 
 import java.util.Scanner;
 
+/*
+* Essa classe é responsável em representar os pontos fixos da matriz
+* */
+
 public record FixedPoint(int i, int j, int r, int g, int b) {
     static FixedPoint fromScanner(final Scanner s) {
         return new FixedPoint(

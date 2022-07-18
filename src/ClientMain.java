@@ -7,6 +7,12 @@ public class ClientMain {
 
     public static void main(String[] args) {
 
+        /*
+         * Argumentos esperados para execução do cliente:
+         * - IP
+         * - Porta de conexão
+         * */
+
         if (args.length != 2) {
             System.out.println("ClientMain help:");
             System.out.println("\tjava ClientMain <IP> <PORT>");

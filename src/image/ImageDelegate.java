@@ -6,11 +6,16 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.IntStream;
 
+/*
+* Essa classe é responsável por todo processo lógico realizado pelos clientes e pelo servidor.
+* Ela fornece os métodos para a criação/manipulação de imagens.
+* */
+
 public class ImageDelegate {
-    private static final int GRAY = 127;
-    private final int innerSize;
-    private final List<FixedPoint> fixedPoints;
-    private final Image image;
+    private static final int GRAY = 127; // Cor da borda
+    private final int innerSize; // Tamanho da imagem desconsiderando a borda
+    private final List<FixedPoint> fixedPoints; // Lista de pontos fixos
+    private final Image image; // Matriz
 
     public ImageDelegate(final int imageSize, final List<FixedPoint> fixedPoints) {
         this.innerSize = imageSize;
@@ -19,6 +24,7 @@ public class ImageDelegate {
         updateImageFixedPoints();
     }
 
+    // Inicializa o a matriz a partir do "Scanner" fornecido pelo Java para leitura de arquivos
     public static ImageDelegate fromScanner(final Scanner s) {
         final var imageSize = s.nextInt();
         final var fixedPointCount = s.nextInt();
@@ -29,6 +35,7 @@ public class ImageDelegate {
         return new ImageDelegate(imageSize, fixedPoints);
     }
 
+    // Realiza a inserção dos pontos fixos na imagem
     public void updateImageFixedPoints() {
         fixedPoints.parallelStream().forEach(fp -> {
             // TODO: Check if should have offset or not
@@ -40,6 +47,8 @@ public class ImageDelegate {
         });
     }
 
+    // Realiza a "divisão" da imagem em segmentos de mesmo tamanho, cada um contendo linhas extras
+    // para o cálulo de estêncil.
     public Image[] split(final int n) {
         final int offset = innerSize / n;
 
@@ -55,6 +64,7 @@ public class ImageDelegate {
                 }).toArray(Image[]::new);
     }
 
+    // Realiza a "junção" dos segmentos fornecidos após os cálculos dos clientes
     public void merge(final Image[] segments) {
         final int count = segments.length;
         final int offset = innerSize / count;
@@ -64,12 +74,14 @@ public class ImageDelegate {
                 .forEach(im -> updateImageWithSegment(segments[im], offset * im));
     }
 
+    // Método auxiliar para merge()
     private void updateImageWithSegment(final Image segment, final int iOffset) {
         IntStream.range(0, 3)
                 .parallel()
                 .forEach(ch -> updateChannelWithSegment(ch, segment, iOffset));
     }
 
+    // Método auxiliar para merge()
     private void updateChannelWithSegment(final int ch, final Image segment, final int iOffset) {
         System.arraycopy(
                 segment.channels[ch], 1, // Source, offset
@@ -82,8 +94,9 @@ public class ImageDelegate {
         return image;
     }
 
+    // Classe que representa a imagem como uma matriz de inteiros
     public static final class Image implements Serializable {
-        final int[][][] channels;
+        final int[][][] channels; // Canais R-G-B
 
         public Image(final int[][][] channels) {
             this.channels = channels;
@@ -93,6 +106,7 @@ public class ImageDelegate {
             this(new int[][][]{redChannel, greenChannel, blueChannel});
         }
 
+        // Realiza o cálculo da média de um ponto X
         private static int neighborsAverageOrBorder(final int[][] src, final int i, final int j) {
             if (coordinateIsBorder(src, i, j))
                 return src[i][j];
@@ -104,10 +118,12 @@ public class ImageDelegate {
                     + src[i][j + 1]) / 5;
         }
 
+        // Auxiliar para neighborsAverageOrBorder()
         private static boolean coordinateIsBorder(int[][] src, int i, int j) {
             return i == 0 || j == 0 || i == src.length - 1 || j == src[0].length - 1;
         }
 
+        // Inicializa a borda da matriz
         private static int[][] grayBorderedChannel(final int size) {
             final var matrix = new int[size][size];
             Arrays.fill(matrix[0], GRAY);
@@ -117,6 +133,7 @@ public class ImageDelegate {
             return matrix;
         }
 
+        // Cria uma "imagem" com borda cinza
         private static Image grayBorderedImage(final int imageSize) {
             return new Image(
                     grayBorderedChannel(imageSize),
@@ -125,12 +142,14 @@ public class ImageDelegate {
             );
         }
 
+        // Realiza uma iteração do cálculo de estêncil
         public void doStencilIteration() {
             for (int i = 0; i < 3; ++i) {
                 this.channels[i] = doStencilIterationForChannel(this.channels[i]);
             }
         }
 
+        // Auxiliar de doStencilIteration()
         private int[][] doStencilIterationForChannel(int[][] channel) {
             final var width = getWidth();
             final var height = getHeight();
