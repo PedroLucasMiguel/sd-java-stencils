@@ -85,7 +85,8 @@ public class Server {
     }
 
     private Image[] readSegmentsFromClients() {
-        return Arrays.stream(this.clients).parallel()
+        return Arrays.stream(this.clients)
+                .parallel()
                 .map(client -> {
                     try {
                         return client.readImage();
@@ -97,7 +98,8 @@ public class Server {
     }
 
     private void writeSegmentsToClients(final Image[] images) {
-        IntStream.range(0, clientCount).parallel()
+        IntStream.range(0, clientCount)
+                .parallel()
                 .forEach(i -> {
                     try {
                         this.clients[i].writeImage(images[i]);

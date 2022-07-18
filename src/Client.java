@@ -1,3 +1,4 @@
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -27,6 +28,9 @@ public class Client {
 //                System.out.println("Receiving object from server");
                 image = (Image) this.inputStream.readObject();
 //                System.out.println("Success");
+            } catch (EOFException e) {
+                System.out.println("Server sent no more objects, closing");
+                return;
             } catch (IOException | ClassNotFoundException e) {
                 System.out.println("Error reading from server");
                 throw new RuntimeException(e);

@@ -145,8 +145,9 @@ public class ImageDelegate {
         @Override
         public String toString() {
             final var sb = new StringBuilder();
-            for (int i = 0; i < reds.length; ++i) {
-                for (int j = 0; j < reds[0].length; ++j) {
+            // Do not print borders
+            for (int i = 1; i < reds.length - 1; ++i) {
+                for (int j = 1; j < reds[0].length - 1; ++j) {
                     sb.append("< %d, %d, %d > ".formatted(reds[i][j], greens[i][j], blues[i][j]));
                 }
                 sb.append('\n');
