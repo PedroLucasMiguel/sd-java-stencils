@@ -17,7 +17,7 @@ public class ServerMain {
 
         if (args.length != 4) {
             System.out.println("ServerMain help:");
-            System.out.println("    java ServerMain <PORT> <N_CLIENTS> <INPUT_FILE_PATH> <OUTPUT_FILE_PATH>");
+            System.out.println("\tjava ServerMain <PORT> <N_CLIENTS> <INPUT_FILE_PATH> <OUTPUT_FILE_PATH>");
             return;
         } else {
             PORT = Integer.parseInt(args[0]);

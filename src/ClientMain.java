@@ -9,7 +9,7 @@ public class ClientMain {
 
         if (args.length != 2) {
             System.out.println("ClientMain help:");
-            System.out.println("    java ClientMain <IP> <PORT>");
+            System.out.println("\tjava ClientMain <IP> <PORT>");
             return;
         } else {
             IP = args[0];
