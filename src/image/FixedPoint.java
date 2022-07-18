@@ -12,4 +12,13 @@ public record FixedPoint(int i, int j, int r, int g, int b) {
                 s.nextInt()
         );
     }
+
+    public int getChannelFor(final int index) {
+        return switch (index) {
+            case 0 -> this.r();
+            case 1 -> this.g();
+            case 2 -> this.b();
+            default -> -1;
+        };
+    }
 }

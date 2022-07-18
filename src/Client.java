@@ -11,14 +11,13 @@ public class Client {
     private final ObjectOutputStream outputStream;
     private final ObjectInputStream inputStream;
 
-    public Client(String path, int port) throws IOException {
+    public Client(final String path, final int port) throws IOException {
         socket = new Socket(path, port);
         outputStream = new ObjectOutputStream(socket.getOutputStream());
         inputStream = new ObjectInputStream(socket.getInputStream());
     }
 
     public void listenAndProcess() {
-
         System.out.println("Running...");
 
         while (true) {

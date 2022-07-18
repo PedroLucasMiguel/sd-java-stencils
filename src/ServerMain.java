@@ -8,7 +8,7 @@ import image.ImageDelegate;
 import image.ImageDelegate.Image;
 
 public class ServerMain {
-    static final int ITERATION_COUNT = 10000;
+    static final int ITERATION_COUNT = 1;
     public static int PORT;
     public static int CLIENT_COUNT;
     private static String INPUT_FILE_PATH;

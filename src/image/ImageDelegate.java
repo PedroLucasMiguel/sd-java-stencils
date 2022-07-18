@@ -17,17 +17,8 @@ public class ImageDelegate {
         this.innerSize = imageSize;
         this.outerSize = imageSize + 2;
         this.fixedPoints = fixedPoints;
-        this.image = initializeImage(outerSize);
+        this.image = Image.grayBorderedImage(this.outerSize);
         updateImageFixedPoints();
-    }
-
-    private static int[][] borderedMatrix(final int size) {
-        final var matrix = new int[size][size];
-        Arrays.fill(matrix[0], GRAY);
-        Arrays.fill(matrix[size - 1], GRAY);
-        Arrays.stream(matrix).parallel()
-                .forEach(row -> row[0] = row[size - 1] = GRAY);
-        return matrix;
     }
 
     public static ImageDelegate fromScanner(final Scanner s) {
@@ -44,17 +35,10 @@ public class ImageDelegate {
         fixedPoints.parallelStream().forEach(fp -> {
             int i = fp.i() + 1;
             int j = fp.j() + 1;
-            image.reds[i][j] = fp.r();
-            image.greens[i][j] = fp.g();
-            image.blues[i][j] = fp.b();
+            for (int ch = 0; ch < 3; ++ch) {
+                image.channels[ch][i][j] = fp.getChannelFor(ch);
+            }
         });
-    }
-
-    private Image initializeImage(final int imageSize) {
-        final var reds = borderedMatrix(imageSize);
-        final var greens = borderedMatrix(imageSize);
-        final var blues = borderedMatrix(imageSize);
-        return new Image(reds, greens, blues);
     }
 
     public Image[] split(final int n) {
@@ -64,11 +48,11 @@ public class ImageDelegate {
         for (int i = 0; i < n; ++i) {
             final int startIndex = i * offset;
             final int finalIndex = startIndex + offset + 2;
-            images[i] = new Image(
-                    Arrays.copyOfRange(image.reds, startIndex, finalIndex),
-                    Arrays.copyOfRange(image.greens, startIndex, finalIndex),
-                    Arrays.copyOfRange(image.blues, startIndex, finalIndex)
-            );
+            images[i] = new Image(new int[][][]{
+                    Arrays.copyOfRange(image.channels[0], startIndex, finalIndex),
+                    Arrays.copyOfRange(image.channels[1], startIndex, finalIndex),
+                    Arrays.copyOfRange(image.channels[2], startIndex, finalIndex)
+            });
         }
 
         return images;
@@ -77,22 +61,20 @@ public class ImageDelegate {
     public void merge(final Image[] segments) {
         final int count = segments.length;
         final int offset = innerSize / count;
+        final int width = segments[0].getWidth();
+        final int height = segments[0].getHeight();
 
-        final int width = segments[0].reds.length;
-
-        for (int i = 0; i < count; ++i) {
-            // Can't parallelize (for now), needs to be in order to overwrite wrong values
-            copyPartialContents(i * offset, segments[i], width);
+        for (int im = 0; im < count; ++im) {
+            for (int ch = 0; ch < 3; ++ch) {
+                for (int i = 1; i < width - 1; ++i) {
+                    for (int j = 1; j < height - 1; ++j) {
+                        this.image.channels[ch][offset * im + i][j] = segments[im].channels[ch][i][j];
+                    }
+                }
+            }
         }
 
         updateImageFixedPoints();
-    }
-
-    private void copyPartialContents(final int start, Image theImage, int rowCount) {
-        // Avoid overwriting correct values from above
-        System.arraycopy(theImage.reds, 1, image.reds, start + 1, rowCount - 1);
-        System.arraycopy(theImage.greens, 1, image.greens, start + 1, rowCount - 1);
-        System.arraycopy(theImage.blues, 1, image.blues, start + 1, rowCount - 1);
     }
 
     public Image getImage() {
@@ -100,14 +82,10 @@ public class ImageDelegate {
     }
 
     public static final class Image implements Serializable {
-        int[][] reds;
-        int[][] greens;
-        int[][] blues;
+        final int[][][] channels;
 
-        public Image(final int[][] reds, final int[][] greens, final int[][] blues) {
-            this.reds = reds;
-            this.greens = greens;
-            this.blues = blues;
+        public Image(final int[][][] channels) {
+            this.channels = channels;
         }
 
         private static int neighborsAverageOrBorder(final int[][] src, final int i, final int j) {
@@ -121,15 +99,31 @@ public class ImageDelegate {
                     + src[i][j + 1]) / 5;
         }
 
+        private static int[][] borderedMatrix(final int size) {
+            final var matrix = new int[size][size];
+            Arrays.fill(matrix[0], GRAY);
+            Arrays.fill(matrix[size - 1], GRAY);
+            Arrays.stream(matrix).parallel()
+                    .forEach(row -> row[0] = row[size - 1] = GRAY);
+            return matrix;
+        }
+
+        private static Image grayBorderedImage(final int imageSize) {
+            final var reds = borderedMatrix(imageSize);
+            final var greens = borderedMatrix(imageSize);
+            final var blues = borderedMatrix(imageSize);
+            return new Image(new int[][][]{reds, greens, blues});
+        }
+
         public void doStencilIteration() {
-            this.reds = doStencilIterationForMatrix(reds);
-            this.greens = doStencilIterationForMatrix(greens);
-            this.blues = doStencilIterationForMatrix(blues);
+            for (int i = 0; i < 3; ++i) {
+                this.channels[i] = doStencilIterationForMatrix(this.channels[i]);
+            }
         }
 
         private int[][] doStencilIterationForMatrix(int[][] target) {
-            final var width = target.length;
-            final var height = target[0].length;
+            final var width = getWidth();
+            final var height = getHeight();
 
             final var newMatrix = new int[width][height];
 
@@ -142,13 +136,25 @@ public class ImageDelegate {
             return newMatrix;
         }
 
+        public int getWidth() {
+            return channels[0].length;
+        }
+
+        public int getHeight() {
+            return channels[0][0].length;
+        }
+
         @Override
         public String toString() {
             final var sb = new StringBuilder();
             // Do not print borders
-            for (int i = 1; i < reds.length - 1; ++i) {
-                for (int j = 1; j < reds[0].length - 1; ++j) {
-                    sb.append("< %d, %d, %d > ".formatted(reds[i][j], greens[i][j], blues[i][j]));
+            for (int i = 1; i < getWidth() - 1; ++i) {
+                for (int j = 1; j < getHeight() - 1; ++j) {
+                    sb.append("< %d, %d, %d > ".formatted(
+                            channels[0][i][j],
+                            channels[1][i][j],
+                            channels[2][i][j]
+                    ));
                 }
                 sb.append('\n');
             }
